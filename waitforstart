@@ -1,0 +1,15 @@
+import pygame
+
+class Wait():
+    def __init__(self):
+        self.continue_button = pygame.rect.Rect(1000, 1000, 100, 50)
+        self.ready = 0
+    
+    def draw_wait(self, win):
+        win.fill((255,255,255))
+        pygame.draw.rect(win, (200, 200, 200), self.continue_button)
+        pygame.draw.rect(win, (0, 0, 0), self.continue_button, 1)
+        
+        font_bold = pygame.font.SysFont("Arial", 24, bold=True)
+        text = font.render("Ready", 1, (0,0,0))
+        win.blit(text, (self.continue_button.centerx-text.get_width()/2, self.continue_button.centery-text.get_height()/2))
