@@ -107,7 +107,7 @@ class Trade():
         text = font.render("SELL for " + str(self.defencetokensellcost), 1, (0, 0, 0))
         win.blit(text, (self.recdefencetokenneg.centerx - text.get_width() / 2, self.recdefencetokenneg.centery + 30))
 
-        text = font_bold.render("Grain Available = " + str(P.resources["Grain"]), 1, (0, 0, 0))
+        text = font_bold.render("Grain Available = " + str(int(P.resources["Grain"])), 1, (0, 0, 0))
         win.blit(text, (1665, 400))
 
     def dropdown(self, win, menuNumber):

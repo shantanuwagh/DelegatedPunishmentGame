@@ -3,7 +3,7 @@ import random
 
 
 class DragDrop():
-    def initialize_rectangles(self):
+    def initialize_rectangles(self):            # Set the top 5 rectangles back to start positions
         self.rec1.center = (100, 100)
         self.rec2.center = (375, 100)
         self.rec3.center = (650, 100)
@@ -12,30 +12,30 @@ class DragDrop():
 
 
     def __init__(self):
-        self.rec1 = pygame.rect.Rect(50, 50, 100, 100)
+        self.rec1 = pygame.rect.Rect(50, 50, 100, 100)          # Initialise rectangles
         self.rec2 = pygame.rect.Rect(50, 50, 100, 100)
         self.rec3 = pygame.rect.Rect(50, 50, 100, 100)
         self.rec4 = pygame.rect.Rect(50, 50, 100, 100)
         self.rec5 = pygame.rect.Rect(50, 50, 100, 100)
-        self.target = pygame.rect.Rect(0, 540, 1300, 540)
-        self.recSteal = pygame.rect.Rect(1080, 500, 220, 25)
-        self.score = [0,0,0,0,0]
-        self.stage = 0
-        self.bgs = ["plainbg.jpg", "seedbg.jpg", "fertibg.jpg", "waterbg.jpg", "plantsbg.jpg"]
-        self.initialize_rectangles()
-        self.log_last_message = []
+        self.target = pygame.rect.Rect(0, 540, 1300, 540)       # Bottom half of the screen is the target
+        self.recSteal = pygame.rect.Rect(1080, 500, 220, 25)       # Button to go to steal/defend screen
+        self.score = [0,0,0,0,0]                                # How many boxes has the player pulled?
+        self.stage = 0                                          # What stage of production is the player on
+        self.bgs = ["plainbg.jpg", "seedbg.jpg", "fertibg.jpg", "waterbg.jpg", "plantsbg.jpg"] # Backgrounds
+        self.initialize_rectangles() # Call to set rectangles at the original locations
+        self.log_last_message = [] # Last log message to be displayed on the bottom left
 
 
-    def draw_game(self, win, P):
-        win.fill((255,255,255))
+    def draw_game(self, win, P):                    # Function declaration
+        win.fill((255,255,255))                     # Paint the screen white to begin with
 
 
-        win.blit(pygame.image.load(self.bgs[self.stage]), (0,0))
-        font = pygame.font.SysFont("Arial", 20)
+        win.blit(pygame.image.load(self.bgs[self.stage]), (0,0))    # Based upon the player's stage,
+        font = pygame.font.SysFont("Arial", 20)                     # Defining fonts
         font_bold = pygame.font.SysFont("Arial", 20, bold=True)
-        text = font_bold.render(str("GRAIN"), 1, (0,0,0))
+        text = font_bold.render(str("GRAIN"), 1, (0,0,0))           # Format text to be displayed
         win.blit(text, (1200, 960))
-        text = font_bold.render(str(P.resources["Grain"]), 1, (0, 0, 0))
+        text = font_bold.render(str(int(P.resources["Grain"])), 1, (0, 0, 0))
         win.blit(text, (1200, 980))
 
         font_title = pygame.font.SysFont("Arial", 28, bold=True)

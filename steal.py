@@ -27,7 +27,7 @@ class Cross():
 
 class Steal():
 
-    def __init__(self):
+    def __init__(self, player_no):
         self.maps = [pygame.rect.Rect(50, 50, 180, 180),
                      pygame.rect.Rect(250, 50, 180, 180),
                      pygame.rect.Rect(450, 50, 180, 180),
@@ -39,10 +39,10 @@ class Steal():
         self.stealtokensize = (10, 10)
         self.stealtoken = [Cross(self.stealtokenstartcoordinates[0], self.stealtokenstartcoordinates[1], self.stealtokensize[0], self.stealtokensize[1], (255, 0, 0), 2) for i in range(self.numberofstealtokens)]
         self.defencetokenstartcoordinates = (380, 425)
-        self.numberofdefencetokens = 10
+        self.numberofdefencetokens = 10 if player_no == 1 else 0
         self.recDraw = pygame.rect.Rect(0, 500, 150, 25)
         self.defencetokensize = (40, 40)
-        self.recDefenceTokens = [pygame.rect.Rect(self.defencetokenstartcoordinates[0], self.defencetokenstartcoordinates[1], self.defencetokensize[0], self.defencetokensize[1]) for i in range(self.numberofdefencetokens)]
+        self.recDefenceTokens = [pygame.rect.Rect(self.defencetokenstartcoordinates[0], self.defencetokenstartcoordinates[1], self.defencetokensize[0], self.defencetokensize[1]) for i in range(self.numberofdefencetokens)] if player_no==1 else []
 
         self.stealing_from = [0 for i in range(self.numberofstealtokens)]
         self.stealoclock = [0 for i in range(self.numberofstealtokens)]
@@ -59,18 +59,18 @@ class Steal():
             self.defence_coordinates.append((self.defencetokenstartcoordinates[0], self.defencetokenstartcoordinates[1]))
         for i in range(self.numberofstealtokens):
             self.steal_coordinates.append((self.stealtokenstartcoordinates[0], self.stealtokenstartcoordinates[1]))
-
+        self.caught = [[0,0] for i in range(self.numberofstealtokens)]
         self.recLogY = 600
         self.recLogsize = 420
         self.recLog = pygame.rect.Rect(0, self.recLogY, 650, self.recLogsize)
         self.ranking = []
         self.recPunishment = pygame.rect.Rect(885, 450, 180, 180)
 
-    def initialize_steal_token(self, n):
+    def initialize_steal_token(self, n, text):
         self.stealtoken[n].x = self.stealtokenstartcoordinates[0]
         self.stealtoken[n].y = self.stealtokenstartcoordinates[1]
         self.steal_coordinates[n] = (self.stealtokenstartcoordinates[0], self.stealtokenstartcoordinates[1])
-        # print("steal coords have been updates to = ", self.steal_coordinates)
+        print(text)
 
 
     def initialize_defence_token(self, n):

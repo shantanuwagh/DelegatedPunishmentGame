@@ -9,6 +9,7 @@ import pickle
 from numbers import Number
 from datetime import datetime
 import time
+import csv
 ##########################################################################################################
 import sys
 from numbers import Number
@@ -21,28 +22,28 @@ except NameError: # Python 3
     zero_depth_bases = (str, bytes, Number, range, bytearray)
     iteritems = 'items'
 
-def getsize(obj_0):
-    """Recursively iterate to sum size of object & members."""
-    _seen_ids = set()
-    def inner(obj):
-        obj_id = id(obj)
-        if obj_id in _seen_ids:
-            return 0
-        _seen_ids.add(obj_id)
-        size = sys.getsizeof(obj)
-        if isinstance(obj, zero_depth_bases):
-            pass # bypass remaining control flow and return
-        elif isinstance(obj, (tuple, list, Set, deque)):
-            size += sum(inner(i) for i in obj)
-        elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
-            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
-        # Check for custom object instances - may subclass above too
-        if hasattr(obj, '__dict__'):
-            size += inner(vars(obj))
-        if hasattr(obj, '__slots__'): # can have __slots__ with __dict__
-            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
-        return size
-    return inner(obj_0)
+# def getsize(obj_0):
+#     """Recursively iterate to sum size of object & members."""
+#     _seen_ids = set()
+#     def inner(obj):
+#         obj_id = id(obj)
+#         if obj_id in _seen_ids:
+#             return 0
+#         _seen_ids.add(obj_id)
+#         size = sys.getsizeof(obj)
+#         if isinstance(obj, zero_depth_bases):
+#             pass # bypass remaining control flow and return
+#         elif isinstance(obj, (tuple, list, Set, deque)):
+#             size += sum(inner(i) for i in obj)
+#         elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
+#             size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+#         # Check for custom object instances - may subclass above too
+#         if hasattr(obj, '__dict__'):
+#             size += inner(vars(obj))
+#         if hasattr(obj, '__slots__'): # can have __slots__ with __dict__
+#             size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
+#         return size
+#     return inner(obj_0)
 
 ##############################################################################################################
 
@@ -71,10 +72,16 @@ def main1():
     clock = pygame.time.Clock()
     n = Network()
     D, P, S, C, T, W = n.getP()
+
     textinput = pygame_textinput.TextInput(font_family="timesnewroman", cursor_color=(0,0,0), repeat_keys_initial_ms=10, repeat_keys_interval_ms=10)
     errormade = False
     MainLoop = True
     loopready = True
+    loop1 = False
+    loop2 = False
+    loop3 = False
+    loop4 = False
+    loop5 = False
 
 
     rectangle1_dragging, rectangle2_dragging, rectangle3_dragging, rectangle4_dragging, rectangle5_dragging = False, False, False, False, False
@@ -86,31 +93,59 @@ def main1():
     scrolling_log = 0
     menuNumber = 0
     selected_menu_option = [None, None]
-
+    renewal_pending = 0
+    punished = 0
+    defence_maploc = ['NA' for i in range(S.numberofdefencetokens)]
     while MainLoop:
 
+        def renewal_pending(P, W):
+            P.update_fertility(W.round_number)
+
+            global selected_rect, scrolling, scrolling_log, menuNumber, selected_menu_option
+            if W.round_number == 1:
+                P.experiment_start_time = W.start_time
+            rectangle1_dragging, rectangle2_dragging, rectangle3_dragging, rectangle4_dragging, rectangle5_dragging = False, False, False, False, False
+            cross_dragging = [False for i in range(S.numberofstealtokens)]
+            defence_dragging = [False for i in range(S.numberofdefencetokens)]
+            flag = [0 for i in range(S.numberofstealtokens)]
+            selected_rect = 0
+            scrolling = 0
+            scrolling_log = 0
+            menuNumber = 0
+            defence_maploc = ['NA' for i in range(S.numberofdefencetokens)]
+            selected_menu_option = [None, None]
+
+
         if loopready:
-            W.draw_wait()
-            if P.type < 2:
-                loopready = False
-                loop1 = True
-                loop2 = False
-                loop3 = False
-                loop4 = False
-                loop5 = False
+            response, chat_list = n.send("wait_class")
+            W.draw_wait(win)
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if W.continue_button.collidepoint(event.pos):
+                        W.ready = 1
+            if datetime.now() >= W.start_time and datetime.now() <= W.end_time:
+                W.started = 0
+                W.ready = 0
+                if P.type < 2:
+                    loopready = False
+                    loop1 = True
+                else:
+                    loopready = False
+                    loop2 = True
 
-            else:
+                renewal_pending(P, W)
+
+            W, P = n.send((W, P))
+
+
+
+        if loop1 and P.type < 2:
+            if datetime.now() >= W.end_time:
+                loopready = True
                 loop1 = False
-                loop2 = True
-                loop3 = False
-                loop4 = False
-                loop5 = False
+                W.ready = 0
+                W.started = 0
 
-            W = n.send(W)
-
-        if not (loop1 and P.type < 2):
-            loop2 = True
-        else:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     MainLoop = False
@@ -284,7 +319,6 @@ def main1():
                         mouse_x, mouse_y = event.pos
                         D.rec5.x = mouse_x + offset_x
                         D.rec5.y = mouse_y + offset_y
-
             response, chat_list = n.send("drag_class")
             # print("11111 sizeof D", getsize(D), "sizeof P", getsize(P))
             # file = open("logfile.txt", 'a')
@@ -303,10 +337,18 @@ def main1():
 
 
         if loop2:
+            if datetime.now() >= W.end_time:
+                loopready = True
+                loop2 = False
+                W.ready = 0
+                W.started = 0
+
             if len(flag) < S.numberofstealtokens:
                 flag.append(0)
+                print("had to append one to the flag as flag length was smaller")
             if len(flag) > S.numberofstealtokens:
                 flag = flag[:-1]
+                print("had to take one from the flag as flag length was larger")
             if len(cross_dragging) < S.numberofstealtokens:
                 cross_dragging.append(False)
             if len(cross_dragging) > S.numberofstealtokens:
@@ -351,7 +393,7 @@ def main1():
                             loop2 = False
                             loop3 = False
                             for i in range(len(S.stealtoken)):
-                                S.initialize_steal_token(i)
+                                S.initialize_steal_token(i, "my client place switch to draw")
                                 P.stealing_from[i] = 0
 
                         if C.recOuter.collidepoint(event.pos):
@@ -374,6 +416,7 @@ def main1():
                         for jdx, j in enumerate(S.stealtoken):
                             if j.collidepoint(event.pos):
                                 cross_dragging[jdx] = 1
+                                flag[jdx] = 0
                                 mouse_x, mouse_y = event.pos
                                 offset_x = j.x - mouse_x
                                 offset_y = j.y - mouse_y
@@ -410,16 +453,20 @@ def main1():
                                 i.x = mouse_x + offset_x
                                 i.y = mouse_y + offset_y
                                 break
-                global number
-                print(number, flag)
-                number += 1
+                # global number
+                # print(number, flag)
+                # number += 1
+
                 if event.type == pygame.MOUSEBUTTONUP:
                     for jdx, j in enumerate(S.stealtoken):
+
                         if cross_dragging[jdx] == True:
                             cross_dragging[jdx] = False
                             for i in range(1, 7):
                                 if i != P.id:
-                                    # flag[jdx] = 0
+
+                                    if flag[jdx] and not S.maps[i - 1].collidepoint(event.pos):
+                                        flag[jdx] = 0
                                     if S.maps[i - 1].collidepoint(event.pos):
                                         S.update_steal_coordinates(jdx)
                                         P.stealing_from[jdx] = i
@@ -433,7 +480,7 @@ def main1():
 
                         if not flag[jdx]:
                             print("flag is not set")
-                            S.initialize_steal_token(jdx)
+                            S.initialize_steal_token(jdx, "myclient place 1")
                             S.steal_start_time[jdx] = None
                             P.stealing_from[jdx] = 0
                         print("Cross is not being dragged.")
@@ -444,8 +491,11 @@ def main1():
                                 defence_dragging[idx] = False
                                 if S.recDefenceTokens[idx].collidelist(S.maps) == -1 and not S.recDefenceTokens[idx].colliderect(S.recPunishment):
                                     S.initialize_defence_token(idx)
+                                    defence_maploc[idx] = 'NA'
                                 else:
+                                    defence_maploc[idx] = S.recDefenceTokens[idx].collidelist(S.maps) + 1 if S.recDefenceTokens[idx].collidelist(S.maps) + 1 else 7
                                     S.update_defence_coordinates(idx)
+                            print("defence maploc ==== ", defence_maploc)
                         except:
                             pass
 
@@ -453,7 +503,7 @@ def main1():
             for i in range(S.numberofstealtokens):
                 if flag[i]:
                     try:
-                        if ((datetime.now() - S.steal_start_time[i]).seconds) >=1:
+                        if ((datetime.now() - S.steal_start_time[i]).microseconds) >=33333:
                             S.stealoclock[i] = 1
                             S.steal_start_time[i] = datetime.now()
                         else:
@@ -465,7 +515,7 @@ def main1():
             # print("22222 sizeof S", getsize(S), "sizeof P", getsize(P))
             # file = open("logfile.txt", 'a')
             # file.write("\n" + str(datetime.now())+ " BEFORE - sizeof S "+ str(getsize(S)) + " sizeof P " + str(getsize(P)))
-            S, P, police_log = n.send((S, P, defence_dragging, cross_dragging))
+            S, P, police_log, punished, data_storage_punishment = n.send((S, P))
             # file.write("\n" + str(datetime.now())+ " AFTER - sizeof S "+ str(getsize(S)) + " sizeof P " + str(getsize(P)))
             S.draw_steal(win, P)
             C.draw_chat(win, P)
@@ -484,8 +534,11 @@ def main1():
 
 
         if loop3:
-
-
+            if datetime.now() >= W.end_time:
+                loopready = True
+                loop3 = False
+                W.ready = 0
+                W.started = 0
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     MainLoop = False
@@ -517,6 +570,11 @@ def main1():
                         pass
 
         if loop4:
+            if datetime.now() >= W.end_time:
+                loopready = True
+                loop4 = False
+                W.ready = 0
+                W.started = 0
             if event.type == pygame.MOUSEBUTTONUP and not C.recOuter.collidepoint(event.pos):
                 loop4 = False
             response, chat_list = n.send("chat_class")
@@ -572,6 +630,9 @@ def main1():
             # file.write("\n" + str(datetime.now())+ " AFTER - sizeof C "+ str(getsize(C)) + " sizeof P " + str(getsize(P)))
 
         if loop5:
+            if datetime.now() >= W.end_time:
+                loopready = True
+                loop5 = False
             C.draw_chat(win, P)
             C.draw_receive(win, chat_list, 0)
             win.blit(textinputQty.get_surface(), (T.recHowMuchToSend.x, T.recHowMuchToSend.y))
@@ -666,9 +727,50 @@ def main1():
                 time.sleep(1)
                 response_message = ""
 
+
+        if P.type==0 and not loopready:
+            save_steal_token = []
+            for i in range(S.numberofstealtokens):
+                save_steal_token.append([i+1, S.stealtoken[i].x, S.stealtoken[i].y, P.stealing_from[i] if P.stealing_from[i] else 'NA', "dropped=" + str(flag[i]), S.caught[i][0], S.caught[i][1]+1])
+
+            payment_scheme = [10,20,30,40,50,60] if P.fertility_orientation=='IE' else [10,10,10,10,10,10]
+            F = open("session_"+str(n.port)+"_for_civilian_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+            F.write(str(P.experiment_start_time)  + '\t' +  str([0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"])  + '\t' +  str(n.port)  + '\t' +
+              str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
+              str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +  str(loop1)  + '\t' +  str(save_steal_token)  + '\t' +  str(D.score)  + '\t' +  str(punished if punished==P.id else 0))
+            # print(P.experiment_start_time, [0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"], n.port,
+            #       "payment scheme", payment_scheme, P.id, P.type,
+            #       W.round_number, datetime.now() - W.start_time, P.resources['Grain'], loop1, save_steal_token, D.score, punished if punished==P.id else 0)
+            punished = 0
+            S.caught = [[0,0] for i in range(S.numberofstealtokens)]
+
+        if P.type==2 and not loopready:
+            save_steal_token = []
+            # for i in range(S.numberofstealtokens):
+                # save_steal_token.append(
+                #     [i + 1, S.stealtoken[i].x, S.stealtoken[i].y, P.stealing_from[i] if P.stealing_from[i] else 'NA',
+                #      "dropped=" + str(flag[i]), S.caught[i][0], S.caught[i][1]+1])
+
+            payment_scheme = [10, 20, 30, 40, 50, 60] if P.fertility_orientation == 'IE' else [10, 10, 10, 10, 10, 10]
+
+            save_defence_token = []
+            for i in range(S.numberofdefencetokens):
+                dropped = 0
+                if S.defence_coordinates[i] != S.defencetokenstartcoordinates:
+                    dropped = 1
+                save_defence_token.append([i+1, S.recDefenceTokens[i].x, S.recDefenceTokens[i].y, S.recDefenceTokens[i].x+S.recDefenceTokens[i].width, S.recDefenceTokens[i].y+S.recDefenceTokens[i].height,
+                                           defence_maploc[i], dropped])
+            F = open("session_"+str(n.port)+"_for_enforcer_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+            F.write('\n' + str(P.experiment_start_time) + '\t' + str([0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"]) + '\t' +
+                  str(n.port)  + '\t' +
+                  str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
+                  str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +  str(loop1)  + '\t' +  str(save_steal_token) + '\t' +  str(D.score) + '\t' +
+                  str(punished if punished == P.id else 0) + '\t' +  str(save_defence_token) + '\t' +  str(data_storage_punishment))
+            punished = 0
+            S.caught = [[0,0] for i in range(S.numberofstealtokens)]
         pygame.display.update()
 
-        clock.tick(60)
+        clock.tick(30)
 
 
     pygame.quit()
