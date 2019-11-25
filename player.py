@@ -5,7 +5,8 @@ class Player():
         self.type = 0
         self.experiment_start_time = 0
         self.id = id
-        self.resources = {"Grain" : 100}
+        self.resources = {"Grain" : 10}
+        self.resource_change = 0
         self.stealing_from = []
         self.fertility = 10
         self.fertility_orientation = ''

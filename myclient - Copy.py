@@ -83,7 +83,8 @@ def main1():
     loop4 = False
     loop5 = False
 
-
+    frame_number = 0
+    header = [0,0]
     rectangle1_dragging, rectangle2_dragging, rectangle3_dragging, rectangle4_dragging, rectangle5_dragging = False, False, False, False, False
     cross_dragging = [False for i in range(S.numberofstealtokens)]
     defence_dragging = [False for i in range(S.numberofdefencetokens)]
@@ -179,13 +180,13 @@ def main1():
                     loop3 = False
 
 
-                if event.type == pygame.MOUSEBUTTONUP and C.recOuter.collidepoint(event.pos):
-                    loop4 = True
+                # if event.type == pygame.MOUSEBUTTONUP and C.recOuter.collidepoint(event.pos):
+                #     loop4 = True
 
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if T.recOuter.collidepoint(event.pos):
-                        loop5 = True
-                        menuNumber = 0
+                # if event.type == pygame.MOUSEBUTTONUP:
+                #     if T.recOuter.collidepoint(event.pos):
+                #         loop5 = True
+                #         menuNumber = 0
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -326,13 +327,13 @@ def main1():
             D, P = n.send((D, P))
             # file.write("\n" + str(datetime.now())+ " AFTER - sizeof D "+ str(getsize(D)) + " sizeof P " + str(getsize(P)))
             D.draw_game(win, P)
-            C.draw_chat(win, P)
-            C.draw_receive(win, chat_list, 0)
-            T.draw_trade(win, P, selected_menu_option)
-            if scrolling:
-                C.draw_scrolled_receive(win, 'neither', chat_list)
-            else:
-                C.draw_receive(win, chat_list, scrolling)
+            # C.draw_chat(win, P)
+            # C.draw_receive(win, chat_list, 0)
+            # T.draw_trade(win, P, selected_menu_option)
+            # if scrolling:
+            #     C.draw_scrolled_receive(win, 'neither', chat_list)
+            # else:
+            #     C.draw_receive(win, chat_list, scrolling)
 
 
 
@@ -384,9 +385,9 @@ def main1():
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
 
-                        if T.recOuter.collidepoint(event.pos):
-                            loop5 = True
-                            menuNumber = 0
+                        # if T.recOuter.collidepoint(event.pos):
+                        #     loop5 = True
+                        #     menuNumber = 0
 
                         if S.recDraw.collidepoint(event.pos):
                             loop1 = True
@@ -396,8 +397,8 @@ def main1():
                                 S.initialize_steal_token(i, "my client place switch to draw")
                                 P.stealing_from[i] = 0
 
-                        if C.recOuter.collidepoint(event.pos):
-                            loop4 = True
+                        # if C.recOuter.collidepoint(event.pos):
+                        #     loop4 = True
 
                         # for i in S.stealtoken:
                         #     if i.collidepoint(event.pos):
@@ -463,7 +464,7 @@ def main1():
                         if cross_dragging[jdx] == True:
                             cross_dragging[jdx] = False
                             for i in range(1, 7):
-                                if i != P.id:
+                                if i != P.id and i not in [1,6]:
 
                                     if flag[jdx] and not S.maps[i - 1].collidepoint(event.pos):
                                         flag[jdx] = 0
@@ -486,18 +487,19 @@ def main1():
                         print("Cross is not being dragged.")
 
 
-                        try:
-                            if defence_dragging[idx]:
-                                defence_dragging[idx] = False
-                                if S.recDefenceTokens[idx].collidelist(S.maps) == -1 and not S.recDefenceTokens[idx].colliderect(S.recPunishment):
-                                    S.initialize_defence_token(idx)
-                                    defence_maploc[idx] = 'NA'
-                                else:
-                                    defence_maploc[idx] = S.recDefenceTokens[idx].collidelist(S.maps) + 1 if S.recDefenceTokens[idx].collidelist(S.maps) + 1 else 7
-                                    S.update_defence_coordinates(idx)
-                            print("defence maploc ==== ", defence_maploc)
-                        except:
-                            pass
+                    try:
+                        if defence_dragging[idx]:
+                            defence_dragging[idx] = False
+                            if S.recDefenceTokens[idx].collidelist(S.maps[1:-1]) == -1 and not S.recDefenceTokens[idx].colliderect(S.recPunishment):
+                                S.initialize_defence_token(idx)
+                                defence_maploc[idx] = 'NA'
+                            else:
+                                defence_maploc[idx] = S.recDefenceTokens[idx].collidelist(S.maps) + 1 if S.recDefenceTokens[idx].collidelist(S.maps) + 1 else 7
+                                S.update_defence_coordinates(idx)
+                        print("defence maploc ==== ", defence_maploc)
+                    except:
+                        print("Errors in defence dragging")
+                        pass
 
 
             for i in range(S.numberofstealtokens):
@@ -518,19 +520,19 @@ def main1():
             S, P, police_log, punished, data_storage_punishment = n.send((S, P))
             # file.write("\n" + str(datetime.now())+ " AFTER - sizeof S "+ str(getsize(S)) + " sizeof P " + str(getsize(P)))
             S.draw_steal(win, P)
-            C.draw_chat(win, P)
-            C.draw_receive(win, chat_list, 0)
+            # C.draw_chat(win, P)
+            # C.draw_receive(win, chat_list, 0)
             T.draw_trade(win, P, selected_menu_option)
 
             if scrolling_log:
-                S.draw_scrolled_log(win, police_log, 'neither')
+                scrolling_log = S.draw_scrolled_log(win, police_log, 'neither')
             else:
-                S.draw_log(win, police_log, scrolling)
+                S.draw_log(win, police_log, scrolling_log)
 
-            if scrolling:
-                C.draw_scrolled_receive(win, 'neither', chat_list)
-            else:
-                C.draw_receive(win, chat_list, scrolling)
+            # if scrolling:
+            #     C.draw_scrolled_receive(win, 'neither', chat_list)
+            # else:
+            #     C.draw_receive(win, chat_list, scrolling)
 
 
         if loop3:
@@ -589,9 +591,9 @@ def main1():
 
                 if event.type == pygame.MOUSEBUTTONUP:
 
-                    if T.recOuter.collidepoint(event.pos):
-                        loop5 = True
-                        menuNumber = 0
+                    # if T.recOuter.collidepoint(event.pos):
+                    #     loop5 = True
+                    #     menuNumber = 0
 
                     for i in range(len(C.playerRectangles)):
                         if C.playerRectangles[i].collidepoint(event.pos):
@@ -734,10 +736,18 @@ def main1():
                 save_steal_token.append([i+1, S.stealtoken[i].x, S.stealtoken[i].y, P.stealing_from[i] if P.stealing_from[i] else 'NA', "dropped=" + str(flag[i]), S.caught[i][0], S.caught[i][1]+1])
 
             payment_scheme = [10,20,30,40,50,60] if P.fertility_orientation=='IE' else [10,10,10,10,10,10]
-            F = open("session_"+str(n.port)+"_for_civilian_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
-            F.write(str(P.experiment_start_time)  + '\t' +  str([0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"])  + '\t' +  str(n.port)  + '\t' +
+            F = open(r"data/" + "session_"+str(n.port)+"_for_civilian_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+
+            if not header[0]:
+                F.write(str("frame number") + '\t' + str("ExperimentStart") + '\t' + str("GlobalParameters") + '\t' + str("SessionID") + '\t' + str("PaymentScheme") + '\t' +
+                        str("PlayerID") + '\t' + str("PlayerRole") + '\t' + str("Period") + '\t' +
+                        str("CurrentTime") + '\t' +	str("Balance") + '\t' + str("Screen") + '\t' + str("StealToken") + '\t' +
+                        str("ProductionInputs") + '\t' + str("Punished") + '\t' + str("DefendTokens") + '\t' + str("PunishmentEvents") + '\t' + str("FrameNumber"))
+                header[0] = 1
+            F.write('\n' + str(P.experiment_start_time)  + '\t' +  str([0.1, 17, 10, 10, 180, 15, 0.7])  + '\t' +  str(n.port)  + '\t' +
               str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
-              str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +  str(loop1)  + '\t' +  str(save_steal_token)  + '\t' +  str(D.score)  + '\t' +  str(punished if punished==P.id else 0))
+              str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +
+              str(loop1)  + '\t' +  str(save_steal_token)  + '\t' +  str(D.score)  + '\t' +  str(punished if punished==P.id else 0) + '\t' + 'N/A' + '\t' + 'N/A' + '\t' + str(frame_number))
             # print(P.experiment_start_time, [0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"], n.port,
             #       "payment scheme", payment_scheme, P.id, P.type,
             #       W.round_number, datetime.now() - W.start_time, P.resources['Grain'], loop1, save_steal_token, D.score, punished if punished==P.id else 0)
@@ -760,17 +770,31 @@ def main1():
                     dropped = 1
                 save_defence_token.append([i+1, S.recDefenceTokens[i].x, S.recDefenceTokens[i].y, S.recDefenceTokens[i].x+S.recDefenceTokens[i].width, S.recDefenceTokens[i].y+S.recDefenceTokens[i].height,
                                            defence_maploc[i], dropped])
-            F = open("session_"+str(n.port)+"_for_enforcer_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
-            F.write('\n' + str(P.experiment_start_time) + '\t' + str([0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"]) + '\t' +
+            F = open(r"data/" + "session_"+str(n.port)+"_for_enforcer_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+            print("header", header)
+            if not header[1]:
+                F.write("ExperimentStart" + '\t' + "GlobalParameters" + '\t' + "SessionID" + '\t' + str(
+                    "PaymentScheme") + '\t' +
+                        str("PlayerID") + '\t' + str("PlayerRole") + '\t' + str("Period") + '\t' +
+                        str("CurrentTime") + '\t' + str("Balance") + '\t' + str("Screen") + '\t' + str("StealToken") + '\t' +
+                        str("ProductionInputs") + '\t' + str("Punished") + '\t' + str("DefendTokens") + '\t' + str(
+                    "	PunishmentEvents") + '\t' + str("FrameNumber"))
+                header[1] = 1
+            F.write('\n' + str(P.experiment_start_time) + '\t' + str([0.1, 17, 10, 10, 180, 15, 0.7]) + '\t' +
                   str(n.port)  + '\t' +
                   str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
                   str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +  str(loop1)  + '\t' +  str(save_steal_token) + '\t' +  str(D.score) + '\t' +
-                  str(punished if punished == P.id else 0) + '\t' +  str(save_defence_token) + '\t' +  str(data_storage_punishment))
+                  str(punished if punished == P.id else 0) + '\t' +  str(save_defence_token) + '\t' +  str(data_storage_punishment) + '\t' + str(frame_number))
             punished = 0
             S.caught = [[0,0] for i in range(S.numberofstealtokens)]
+        print(frame_number)
+        if frame_number == 32:
+            frame_number = 1
+        else:
+            frame_number += 1
         pygame.display.update()
 
-        clock.tick(30)
+        clock.tick(32)
 
 
     pygame.quit()

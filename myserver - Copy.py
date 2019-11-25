@@ -81,7 +81,7 @@ chat_lists = {
     "56" : []
 }
 trades_list = []
-server = "144.39.201.84"
+server = "192.168.1.15"
 port = 5556
 
 fertility_orientation = "IE"
@@ -131,7 +131,25 @@ all_steals = {
             5: [],
             6: []
 }
-police_log = []
+police_log = [['11:14:02 AM', 4, 3],
+['11:14:05 AM', 2, 3],
+['11:14:09 AM', 5, 3],
+['11:14:11 AM', 5, 3],
+['11:14:13 AM', 4, 3],
+['11:14:15 AM', 4, 3],
+['11:14:16 AM', 4, 3],
+['11:14:19 AM', 2, 3],
+['11:14:21 AM', 2, 3],
+              ['11:14:02 AM', 4, 3],
+              ['11:14:05 AM', 2, 3],
+              ['11:14:09 AM', 5, 3],
+              ['11:14:11 AM', 5, 3],
+              ['11:14:13 AM', 4, 3],
+              ['11:14:15 AM', 4, 3],
+              ['11:14:16 AM', 4, 3],
+              ['11:14:19 AM', 2, 3],
+              ['11:14:21 AM', 2, 3]
+              ]
 log_length = len(police_log)
 updater = []
 tokens_allocated = 0
@@ -141,7 +159,7 @@ new_chat_row = []
 
 
 round_constants = {
-    'round_time':30,
+    'round_time':300,
     'round_number': 0
                    }
 # ready = [0,0,0,0,0]
@@ -150,33 +168,33 @@ round_constants = {
         # p.type = 2
 
 
-def my_punishment(culprit, victim):
-    n_punishable = 5 if enforcer_random == victim else 4
-
-    if tokens_allocated == 0 or enforcer_random == culprit:
-        punishment_vector = [1,0,0,0,0,0,0]
-        arrange = [0,1,2,3,4,5,6]
-    else:
-        P_nobody = 0
-        P_victim = 0
-        P_innocent = (1 / n_punishable) * (1 - (tokens_allocated / 10))
-        P_culprit = (1 / n_punishable) * (tokens_allocated / 10) * (n_punishable - 1)
-        P_enforcer = 0
-
-        if enforcer_random == victim:
-            punishment_vector = [P_nobody, P_enforcer, P_culprit, P_innocent, P_innocent, P_innocent, P_innocent]
-            arrange = [0, enforcer_random, culprit]
-        else:
-            punishment_vector = [P_nobody, P_enforcer, P_victim, P_culprit, P_innocent, P_innocent, P_innocent]
-            arrange = [0, enforcer_random, victim, culprit]
-
-        for i in range(1,7):
-            if i not in arrange:
-                arrange.append(i)
-    print("mypunishment", arrange, punishment_vector)
-    chosen = random.choices(arrange, punishment_vector)
-    print("mypunishment", chosen)
-    return chosen
+# def my_punishment(culprit, victim):
+#     n_punishable = 5 if enforcer_random == victim else 4
+#
+#     if tokens_allocated == 0 or enforcer_random == culprit:
+#         punishment_vector = [1,0,0,0,0,0,0]
+#         arrange = [0,1,2,3,4,5,6]
+#     else:
+#         P_nobody = 0
+#         P_victim = 0
+#         P_innocent = (1 / n_punishable) * (1 - (tokens_allocated / 10))
+#         P_culprit = (1 / n_punishable) * (tokens_allocated / 10) * (n_punishable - 1)
+#         P_enforcer = 0
+#
+#         if enforcer_random == victim:
+#             punishment_vector = [P_nobody, P_enforcer, P_culprit, P_innocent, P_innocent, P_innocent, P_innocent]
+#             arrange = [0, enforcer_random, culprit]
+#         else:
+#             punishment_vector = [P_nobody, P_enforcer, P_victim, P_culprit, P_innocent, P_innocent, P_innocent]
+#             arrange = [0, enforcer_random, victim, culprit]
+#
+#         for i in range(1,7):
+#             if i not in arrange:
+#                 arrange.append(i)
+#     # print("mypunishment", arrange, punishment_vector)
+#     chosen = random.choices(arrange, punishment_vector)
+#     # print("mypunishment", chosen)
+#     return chosen
 
 
 def ranking():
@@ -196,24 +214,26 @@ def probability():
         return (1 / n_punishable) * (1 - (tokens_allocated / 10)), (1 / n_punishable)  + ((n_punishable - 1)/n_punishable)* (tokens_allocated / 10)
     else:
         return 0,0
-
+punish_counter = 0
+# np.random.seed(seed=5)
 def punishment(culprit, victim, enforcer):
-    print("tokens_allocated", tokens_allocated)
-    n_punishable = 5
-    if enforcer_random != victim:
-        n_punishable = 4
 
-    if tokens_allocated and enforcer != culprit:
+    print("tokens_allocated", tokens_allocated)
+    n_punishable = 3
+    # if enforcer_random != victim:
+    #     n_punishable = 3
+
+    if tokens_allocated: # and enforcer != culprit
         P_nobody = 0
         P_victim = 0
         abar = 10
-        P_innocent = (1 / n_punishable) * (1 - (tokens_allocated / abar))
-        P_culprit = (1 / n_punishable)  + ((n_punishable - 1)/n_punishable)* (tokens_allocated / abar)
+        P_innocent = (abar - tokens_allocated)/(n_punishable*abar)
+        P_culprit = (abar + (n_punishable-1)*tokens_allocated)/(n_punishable*abar)
         P_enforcer = 0
         punishment_vector = [P_nobody]
+        global punish_counter
 
-
-        for player in players:
+        for player in players[0:-1]:
 
             if player.id == enforcer:
                 punishment_vector.append(P_enforcer)
@@ -225,10 +245,11 @@ def punishment(culprit, victim, enforcer):
                 punishment_vector.append(P_innocent)
 
     else:
-        punishment_vector = [1,0,0,0,0,0,0]
+        punishment_vector = [1,0,0,0,0,0]
 
     list_punishment = list(np.random.multinomial(1, punishment_vector))
-    print("punishmentvector=", punishment_vector, "list_pun=", list_punishment)
+    print("punishmentvector=", punishment_vector, "list_pun=", list_punishment, punish_counter)
+    punish_counter += 1
     return list_punishment.index(1)
 
 
@@ -291,7 +312,6 @@ def threaded_client(conn, player_no):
                 waits[player_no].ready = wait.ready
                 sum_of_ready = 0
                 for i in range(6):
-                    print("all waits", waits[i].ready)
                     sum_of_ready += waits[i].ready
             if sum_of_ready >= 2:
                 print("Because sum_of_ready was ", sum_of_ready, "we could now start says player", player_no,". Look what waits[i].ready looks like.", "A", waits[0].ready, "B", waits[1].ready, "C", waits[2].ready, "D", waits[3].ready, "E", waits[4].ready, "F", waits[5].ready)
@@ -301,7 +321,7 @@ def threaded_client(conn, player_no):
                 waits[player_no].round_number = round_constants['round_number']
 
                 for i in range(6):
-                    waits[i].start_time = datetime.now() + timedelta(seconds=3)
+                    waits[i].start_time = datetime.now() + timedelta(seconds=5)
                     waits[i].end_time = waits[i].start_time + timedelta(seconds=round_constants['round_time'])
                     waits[i].ready = 0
                     waits[i].started = wait.started
@@ -337,7 +357,7 @@ def threaded_client(conn, player_no):
                     waits[i].started = 0
             conn.send(pickle.dumps((wait, player)))
 
-        if data_type == "chat_class":
+        if data_type == "chat_classs":
 
             chat, player = pickle.loads(conn.recv(3*4096))
             # print("round_change_flag on chat", round_change_flag[str(player_no)], player_no)
@@ -377,7 +397,7 @@ def threaded_client(conn, player_no):
 
             conn.send(pickle.dumps((chat, player)))
 
-        if data_type == "trade_class":
+        if data_type == "trade_classs":
 
             response_message = ''
             trade, player = pickle.loads(conn.recv(3*4096))
@@ -425,25 +445,27 @@ def threaded_client(conn, player_no):
             if trade.buysell[0] > 0:
                 if players[player_no].resources["Grain"] >= trade.buysell[0]*trade.stealtokenbuycost:
                     steals[player_no].numberofstealtokens += trade.buysell[0]
-                    players[player_no].resources["Grain"] -= trade.buysell[0]*trade.stealtokenbuycost
+                    players[player_no].resource_change -= trade.buysell[0]*trade.stealtokenbuycost
                     trade.buysell[0] = 0
 
             elif trade.buysell[0] < 0:
                 steals[player_no].numberofstealtokens += trade.buysell[0]
-                players[player_no].resources["Grain"] -= trade.buysell[0]*trade.stealtokensellcost
+                players[player_no].resource_change -= trade.buysell[0]*trade.stealtokensellcost
                 trade.buysell[0] = 0
 
             if trade.buysell[1] > 0:
                 if player.resources["Grain"] >= trade.buysell[1] * trade.defencetokenbuycost:
                     steals[player_no].numberofdefencetokens += trade.buysell[1]
-                    players[player_no].resources["Grain"] -= trade.buysell[1]*trade.defencetokenbuycost
+                    players[player_no].resource_change -= trade.buysell[1]*trade.defencetokenbuycost
                     trade.buysell[1] = 0
 
             elif trade.buysell[1] < 0:
                 steals[player_no].numberofdefencetokens += trade.buysell[1]
-                players[player_no].resources["Grain"] -= trade.buysell[1]*trade.defencetokensellcost
+                players[player_no].resource_change -= trade.buysell[1]*trade.defencetokensellcost
                 trade.buysell[1] = 0
 
+            player.resources['Grain'] += players[player_no].resource_change
+            players[player_no].resource_change = 0
             conn.send(pickle.dumps((trade, player, response_message)))
 
         if data_type == "drag_class":
@@ -483,17 +505,18 @@ def threaded_client(conn, player_no):
                 break
             else:
                 if draganddrop.stage == 5:
-                    player.resources["Grain"] += player.fertility
+                    players[player_no].resource_change += player.fertility
                     draganddrop.stage = 0
                     draganddrop.score = [0,0,0,0,0]
-                players[player_no].resources["Grain"] = player.resources["Grain"]
+                players[player_no].resources["Grain"] = max(0, player.resources['Grain'] + players[player_no].resource_change)
+                player.resources['Grain'] = max(0, player.resources['Grain'] + players[player_no].resource_change)
+                players[player_no].resource_change = 0
 
                 conn.send(pickle.dumps((draganddrop, player)))
 
         if data_type == "steal_class":
             steal, player = pickle.loads(conn.recv(100*4096))
-            # if player_no == 1:
-                # print("round_change_flag on steal class", round_change_flag[str(player_no)], player_no)
+
             if round_change_flag[str(player_no)]['steal']:
                 steal = Steal(player.id)
                 steals[player_no] = Steal(player.id)
@@ -531,7 +554,9 @@ def threaded_client(conn, player_no):
                 tokens_allocated = len(steal.recPunishment.collidelistall(steal.recDefenceTokens))
             steal.ranking = steals[player_no].ranking
 
-            player.resources["Grain"] = players[player_no].resources["Grain"]
+            players[player_no].resources["Grain"] = max(0, player.resources['Grain'] + players[player_no].resource_change)
+            player.resources['Grain'] = max(0, player.resources['Grain'] + players[player_no].resource_change)
+            players[player_no].resource_change = 0
             if not steal:
                 print("disconnected")
                 break
@@ -547,10 +572,10 @@ def threaded_client(conn, player_no):
                                 #print(player.stealing_from[i]-1)
                                 #print("reached 3 if")
                                 if players[player.stealing_from[i]-1].resources["Grain"]:
-                                    player.resources["Grain"] += player.stealing_amount_per_30th_of_a_second
-                                    players[player.stealing_from[i]-1].resources["Grain"] -= player.stealing_amount_per_30th_of_a_second
-                                else:
-                                    steal.initialize_steal_token(i, "myserver place 2")
+                                    players[player_no].resource_change += player.stealing_amount_per_30th_of_a_second
+                                    players[player.stealing_from[i]-1].resource_change -= player.stealing_amount_per_30th_of_a_second
+                                # else:
+                                #     steal.initialize_steal_token(i, "myserver place 2")
                                 # print("player "+ str(player.id) +" has ", str(player.resources["Grain"]) + ". He is stealing from player " + str(player.stealing_from[i]) + ". Victim now has "+ str(players[player.stealing_from[i]-1].resources["Grain"]))
                                 steal.stealoclock[i] = 0
 
@@ -571,9 +596,14 @@ def threaded_client(conn, player_no):
                                         print("player ", j, "was found stealing from", stoken[2])
 
                                         # print(stoken_no)
-                                        punished = punishment(j, stoken[2], i)
+                                        punished = punishment(j, stoken[2], 1)
                                         print("punished up", punished)
-                                        chosen = my_punishment(j, stoken[2])
+                                        players[punished-1].resource_change -= 17
+                                        players[0].resource_change += 25
+                                        if punished != j:
+                                            if np.random.randint(low=1, high=100, size=1)[0]>30:
+                                                players[0].resource_change -= 15
+                                        # chosen = my_punishment(j, stoken[2])
                                         tell_the_officer_data_store_punishment[defence_no] = [j, stoken_no, punished, "reprimanded"]
                                         if punished:
                                             police_log.append([datetime.now().strftime("%H:%M:%S %p"), punished, stoken[2]])
@@ -596,9 +626,14 @@ def threaded_client(conn, player_no):
                                         1])):  # if defence rect collides with player's steal token and not found anything before
                                         print("Player ", player.id, "was found stealing from ", coords[2])
 
-                                        punished = punishment(player.id, coords[2], i)
+                                        punished = punishment(player.id, coords[2], 1)
                                         print("punished", punished)
-                                        chosen = my_punishment(player.id, coords[2])
+                                        players[punished-1].resource_change -= 17
+                                        # chosen = my_punishment(player.id, coords[2])
+                                        players[0].resource_change += 25
+                                        if punished != player.id:
+                                            if np.random.randint(low=1, high=100, size=1)[0]>30:
+                                                players[0].resource_change -= 15
                                         print("defence_no ===== ", defence_no)
                                         data_store_punishment[defence_no] = [player.id, coords_no, punished, "reprimanded"]
                                         if punished:
@@ -619,7 +654,7 @@ def threaded_client(conn, player_no):
                 player.update_stealing_from_count(steal.numberofstealtokens-len(player.stealing_from))
                 players[player_no].stealing_from = player.stealing_from
                 steal.P_innocent, steal.P_culprit = probability()
-                players[player_no].resources["Grain"] = player.resources["Grain"]
+                # players[player_no].resources["Grain"] = player.resources["Grain"] ##############################################################################################################
                 steals[player_no] = steal
 
                 conn.send(pickle.dumps((steal, player, police_log, punished, data_store_punishment)))

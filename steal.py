@@ -35,7 +35,7 @@ class Steal():
                      pygame.rect.Rect(850, 50, 180, 180),
                      pygame.rect.Rect(1050, 50, 180, 180)]
         self.stealtokenstartcoordinates = (350, 375)
-        self.numberofstealtokens = 4
+        self.numberofstealtokens = 0 if player_no == 1 else 1
         self.stealtokensize = (10, 10)
         self.stealtoken = [Cross(self.stealtokenstartcoordinates[0], self.stealtokenstartcoordinates[1], self.stealtokensize[0], self.stealtokensize[1], (255, 0, 0), 2) for i in range(self.numberofstealtokens)]
         self.defencetokenstartcoordinates = (380, 425)
@@ -71,7 +71,6 @@ class Steal():
         self.stealtoken[n].y = self.stealtokenstartcoordinates[1]
         self.steal_coordinates[n] = (self.stealtokenstartcoordinates[0], self.stealtokenstartcoordinates[1])
         print(text)
-
 
     def initialize_defence_token(self, n):
         self.recDefenceTokens[n].x = self.defencetokenstartcoordinates[0]
@@ -169,32 +168,33 @@ class Steal():
 
 
         for i in range(1,7):
-            if i != P.id:
-                pygame.draw.rect(win, (240, 240, 240), self.maps[i-1])
-                maptext = "Player "+ str(i)
-                maptext = font.render(maptext, 1, (0, 0, 0))
-                win.blit(maptext, (self.maps[i-1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+20))
-                ranktext = font.render("Rank " + str(self.ranking.index(i)+1), 1, (0,0,0))
-                win.blit(ranktext, (self.maps[i-1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+40))
+            if i not in [1,6]:
+                if i != P.id:
+                    pygame.draw.rect(win, (240, 240, 240), self.maps[i-1])
+                    maptext = "Player "+ str(i)
+                    maptext = font.render(maptext, 1, (0, 0, 0))
+                    win.blit(maptext, (self.maps[i-1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+20))
+                    ranktext = font.render("Rank " + str(self.ranking.index(i)+1), 1, (0,0,0))
+                    win.blit(ranktext, (self.maps[i-1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+40))
 
-                pygame.draw.rect(win, (0, 0, 0), self.maps[i - 1], 1)
-            else:
-                pygame.draw.rect(win, (180, 180, 180), self.maps[i - 1])
-                maptext = "Player "+ str(i) + " (Your Map)"
-                maptext = font.render(maptext, 1, (0, 0, 0))
-                win.blit(maptext, (self.maps[i - 1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+20))
-                ranktext = font.render("Rank " + str(self.ranking.index(i) + 1), 1, (0, 0, 0))
-                win.blit(ranktext, (self.maps[i - 1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i - 1].height + 40))
+                    pygame.draw.rect(win, (0, 0, 0), self.maps[i - 1], 1)
+                else:
+                    pygame.draw.rect(win, (180, 180, 180), self.maps[i - 1])
+                    maptext = "Player "+ str(i) + " (Your Map)"
+                    maptext = font.render(maptext, 1, (0, 0, 0))
+                    win.blit(maptext, (self.maps[i - 1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i-1].height+20))
+                    ranktext = font.render("Rank " + str(self.ranking.index(i) + 1), 1, (0, 0, 0))
+                    win.blit(ranktext, (self.maps[i - 1].centerx - maptext.get_width() / 2, self.maps[i-1].y+self.maps[i - 1].height + 40))
 
-                pygame.draw.rect(win, (0,0,0), self.maps[i - 1], 1)
+                    pygame.draw.rect(win, (0,0,0), self.maps[i - 1], 1)
 
 
-                pygame.draw.rect(win, (0,0,0), self.recDraw)
-                recDrawtext = "<- PRODUCE"
-                recDrawtext = font_bold.render(recDrawtext, 1, (255,255,255))
-                win.blit(recDrawtext, (
-                    self.recDraw.centerx - recDrawtext.get_width() / 2,
-                    self.recDraw.centery - recDrawtext.get_height() / 2))
+                    pygame.draw.rect(win, (0,0,0), self.recDraw)
+                    recDrawtext = "<- PRODUCE"
+                    recDrawtext = font_bold.render(recDrawtext, 1, (255,255,255))
+                    win.blit(recDrawtext, (
+                        self.recDraw.centerx - recDrawtext.get_width() / 2,
+                        self.recDraw.centery - recDrawtext.get_height() / 2))
 
         available_steals = self.numberofstealtokens
         for i in self.stealtoken:
@@ -264,8 +264,10 @@ class Steal():
 
                 y += 35
 
+
     def draw_scrolled_log(self, win, police_log, direction):
         font = pygame.font.SysFont("Arial", 20)
+        self.recLogsize = (len(police_log) + 1) * 35
         if direction == 'up':
             if self.recLogY < 600:
                 self.recLogY = min(self.recLogY + 35, 600)
@@ -285,11 +287,9 @@ class Steal():
                 win.blit(post2, (self.recLog.x + 324, y))
                 win.blit(post3, (self.recLog.x + 540, y))
 
-
             y += 35
 
-
-        if self.recLogY + self.recLogsize == 1100:
+        if self.recLogY + self.recLogsize == 1020:
             return 0
         else:
             return 1
