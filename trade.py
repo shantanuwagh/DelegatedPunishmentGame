@@ -1,6 +1,5 @@
 import pygame
 import pygame_textinput
-from rounded_rect import Rounded_Rect
 class Trade():
     def __init__(self, id):
         self.optionrect1alignment = (1450, 120)

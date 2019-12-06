@@ -22,28 +22,28 @@ except NameError: # Python 3
     zero_depth_bases = (str, bytes, Number, range, bytearray)
     iteritems = 'items'
 
-# def getsize(obj_0):
-#     """Recursively iterate to sum size of object & members."""
-#     _seen_ids = set()
-#     def inner(obj):
-#         obj_id = id(obj)
-#         if obj_id in _seen_ids:
-#             return 0
-#         _seen_ids.add(obj_id)
-#         size = sys.getsizeof(obj)
-#         if isinstance(obj, zero_depth_bases):
-#             pass # bypass remaining control flow and return
-#         elif isinstance(obj, (tuple, list, Set, deque)):
-#             size += sum(inner(i) for i in obj)
-#         elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
-#             size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
-#         # Check for custom object instances - may subclass above too
-#         if hasattr(obj, '__dict__'):
-#             size += inner(vars(obj))
-#         if hasattr(obj, '__slots__'): # can have __slots__ with __dict__
-#             size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
-#         return size
-#     return inner(obj_0)
+def getsize(obj_0):
+    """Recursively iterate to sum size of object & members."""
+    _seen_ids = set()
+    def inner(obj):
+        obj_id = id(obj)
+        if obj_id in _seen_ids:
+            return 0
+        _seen_ids.add(obj_id)
+        size = sys.getsizeof(obj)
+        if isinstance(obj, zero_depth_bases):
+            pass # bypass remaining control flow and return
+        elif isinstance(obj, (tuple, list, Set, deque)):
+            size += sum(inner(i) for i in obj)
+        elif isinstance(obj, Mapping) or hasattr(obj, iteritems):
+            size += sum(inner(k) + inner(v) for k, v in getattr(obj, iteritems)())
+        # Check for custom object instances - may subclass above too
+        if hasattr(obj, '__dict__'):
+            size += inner(vars(obj))
+        if hasattr(obj, '__slots__'): # can have __slots__ with __dict__
+            size += sum(inner(getattr(obj, s)) for s in obj.__slots__ if hasattr(obj, s))
+        return size
+    return inner(obj_0)
 
 ##############################################################################################################
 
@@ -124,7 +124,7 @@ def main1():
                 if event.type == pygame.MOUSEBUTTONUP:
                     if W.continue_button.collidepoint(event.pos):
                         W.ready = 1
-            if datetime.now() >= W.start_time and datetime.now() <= W.end_time:
+            if P.datetime >= W.start_time and P.datetime <= W.end_time:
                 W.started = 0
                 W.ready = 0
                 if P.type < 2:
@@ -141,7 +141,7 @@ def main1():
 
 
         if loop1 and P.type < 2:
-            if datetime.now() >= W.end_time:
+            if P.datetime >= W.end_time:
                 loopready = True
                 loop1 = False
                 W.ready = 0
@@ -338,7 +338,7 @@ def main1():
 
 
         if loop2:
-            if datetime.now() >= W.end_time:
+            if P.datetime >= W.end_time:
                 loopready = True
                 loop2 = False
                 W.ready = 0
@@ -477,7 +477,7 @@ def main1():
 
                         if flag[jdx]:
                             print("Flag is set")
-                            S.steal_start_time[jdx] = datetime.now()
+                            S.steal_start_time[jdx] = P.datetime
 
                         if not flag[jdx]:
                             print("flag is not set")
@@ -505,9 +505,9 @@ def main1():
             for i in range(S.numberofstealtokens):
                 if flag[i]:
                     try:
-                        if ((datetime.now() - S.steal_start_time[i]).microseconds) >=33333:
+                        if ((P.datetime - S.steal_start_time[i]).microseconds) >=33333:
                             S.stealoclock[i] = 1
-                            S.steal_start_time[i] = datetime.now()
+                            S.steal_start_time[i] = P.datetime
                         else:
                             S.stealoclock[i] = 0
                     except:
@@ -522,7 +522,7 @@ def main1():
             S.draw_steal(win, P)
             # C.draw_chat(win, P)
             # C.draw_receive(win, chat_list, 0)
-            T.draw_trade(win, P, selected_menu_option)
+            # T.draw_trade(win, P, selected_menu_option)
 
             if scrolling_log:
                 scrolling_log = S.draw_scrolled_log(win, police_log, 'neither')
@@ -536,7 +536,7 @@ def main1():
 
 
         if loop3:
-            if datetime.now() >= W.end_time:
+            if P.datetime >= W.end_time:
                 loopready = True
                 loop3 = False
                 W.ready = 0
@@ -572,7 +572,7 @@ def main1():
                         pass
 
         if loop4:
-            if datetime.now() >= W.end_time:
+            if P.datetime >= W.end_time:
                 loopready = True
                 loop4 = False
                 W.ready = 0
@@ -632,7 +632,7 @@ def main1():
             # file.write("\n" + str(datetime.now())+ " AFTER - sizeof C "+ str(getsize(C)) + " sizeof P " + str(getsize(P)))
 
         if loop5:
-            if datetime.now() >= W.end_time:
+            if P.datetime >= W.end_time:
                 loopready = True
                 loop5 = False
             C.draw_chat(win, P)
@@ -729,32 +729,71 @@ def main1():
                 time.sleep(1)
                 response_message = ""
 
+        print(str("P=" + str(getsize(P))) + '\t' +
+                        str("D=" + str(getsize(D))) + '\t' +
+                        str("S=" + str(getsize(S))) + '\t' +
+                        str("T=" + str(getsize(T))) + '\t' +
+                        str("C=" + str(getsize(C))) + '\t' +
+                        str("W=" + str(getsize(W))))
 
-        if P.type==0 and not loopready:
+        if P.type==0 and not loopready: #civilian
             save_steal_token = []
             for i in range(S.numberofstealtokens):
-                save_steal_token.append([i+1, S.stealtoken[i].x, S.stealtoken[i].y, P.stealing_from[i] if P.stealing_from[i] else 'NA', "dropped=" + str(flag[i]), S.caught[i][0], S.caught[i][1]+1])
+                save_steal_token.append([i+1, S.stealtoken[i].x, S.stealtoken[i].y, P.stealing_from[i] if P.stealing_from[i] else 'NA', S.caught[i][0], S.caught[i][1]+1])
 
             payment_scheme = [10,20,30,40,50,60] if P.fertility_orientation=='IE' else [10,10,10,10,10,10]
-            F = open(r"data/" + "session_"+str(n.port)+"_for_civilian_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+            # print("str(P.experiment_start_time) = ", str(P.experiment_start_time))
+            F = open(r"data/" + "Session_"+str(n.port)+"_Civilian_"+str(P.id)+"_"+str(P.experiment_start_time).split(' ')[0].replace('-', '') + "_" + str(P.experiment_start_time).split(' ')[1].replace('.', '').replace(':', '') + ".csv", 'a')
+
 
             if not header[0]:
-                F.write(str("frame number") + '\t' + str("ExperimentStart") + '\t' + str("GlobalParameters") + '\t' + str("SessionID") + '\t' + str("PaymentScheme") + '\t' +
-                        str("PlayerID") + '\t' + str("PlayerRole") + '\t' + str("Period") + '\t' +
-                        str("CurrentTime") + '\t' +	str("Balance") + '\t' + str("Screen") + '\t' + str("StealToken") + '\t' +
-                        str("ProductionInputs") + '\t' + str("Punished") + '\t' + str("DefendTokens") + '\t' + str("PunishmentEvents") + '\t' + str("FrameNumber"))
+                F.write(str("ExperimentStart") + '\t' +
+                        str("GlobalParameters") + '\t' +
+                        str("SessionID") + '\t' +
+                        str("PaymentScheme") + '\t' +
+                        str("PlayerID") + '\t' +
+                        str("PlayerRole") + '\t' +
+                        str("Period") + '\t' +
+                        str("CurrentTime") + '\t' +
+                        str("Balance") + '\t' +
+                        str("Screen") + '\t' +
+                        str("StealToken") + '\t' +
+                        str("ProductionInputs") + '\t' +
+                        str("Punished") + '\t' +
+                        str("DefendTokens") + '\t' +
+                        str("PunishmentEvents") + '\t' +
+                        str("FrameNumber")) # 16 columns
                 header[0] = 1
-            F.write('\n' + str(P.experiment_start_time)  + '\t' +  str([0.1, 17, 10, 10, 180, 15, 0.7])  + '\t' +  str(n.port)  + '\t' +
-              str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
-              str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +
-              str(loop1)  + '\t' +  str(save_steal_token)  + '\t' +  str(D.score)  + '\t' +  str(punished if punished==P.id else 0) + '\t' + 'N/A' + '\t' + 'N/A' + '\t' + str(frame_number))
+            # print("-1 day thingy is", str(P.datetime), " minus ", str(W.start_time), " = ", str(P.datetime - W.start_time))
+            F.write('\n' + str(P.experiment_start_time)  + '\t' +
+                    str([0.1, 17, 10, 10, 180, 15, 0.7])  + '\t' +
+                    str(n.port)  + '\t' +
+                    str(payment_scheme)  + '\t' +
+                    str(P.id)  + '\t' +
+                    str(P.type)  + '\t' +
+                    str(W.round_number)  + '\t' +
+                    str(P.datetime - W.start_time)  + '\t' +
+                    str(P.resources['Grain'])  + '\t' +
+                    str(loop1)  + '\t' +
+                    str(save_steal_token).replace("'", "")  + '\t' +
+                    str(D.score)  + '\t' +
+                    str(punished if punished==P.id else 0) + '\t' +
+                    'NA' + '\t' +
+                    'NA' + '\t' +
+                    str(frame_number) + '\t' +
+                    str("P=" + str(getsize(P))) + '\t' +
+                    str("D=" + str(getsize(D))) + '\t' +
+                    str("S=" + str(getsize(S))) + '\t' +
+                    str("T=" + str(getsize(T))) + '\t' +
+                    str("C=" + str(getsize(C))) + '\t' +
+                    str("W=" + str(getsize(W))))
             # print(P.experiment_start_time, [0.1, 0, 10, 10, 180, "reprimand amount", "reprimand probability"], n.port,
             #       "payment scheme", payment_scheme, P.id, P.type,
             #       W.round_number, datetime.now() - W.start_time, P.resources['Grain'], loop1, save_steal_token, D.score, punished if punished==P.id else 0)
             punished = 0
             S.caught = [[0,0] for i in range(S.numberofstealtokens)]
 
-        if P.type==2 and not loopready:
+        if P.type==2 and not loopready: #enforcer
             save_steal_token = []
             # for i in range(S.numberofstealtokens):
                 # save_steal_token.append(
@@ -770,21 +809,50 @@ def main1():
                     dropped = 1
                 save_defence_token.append([i+1, S.recDefenceTokens[i].x, S.recDefenceTokens[i].y, S.recDefenceTokens[i].x+S.recDefenceTokens[i].width, S.recDefenceTokens[i].y+S.recDefenceTokens[i].height,
                                            defence_maploc[i], dropped])
-            F = open(r"data/" + "session_"+str(n.port)+"_for_enforcer_"+str(P.id)+"_"+str(P.experiment_start_time).replace('.', ':').replace(' ', '_').replace(':', '_').replace('-','_')+".csv", 'a')
+            print(P.experiment_start_time)
+            F = open(r"data/" + "Session_"+str(n.port)+"_Enforcer_"+str(P.id)+"_"+str(P.experiment_start_time).split(' ')[0].replace('-','') +"_" + str(P.experiment_start_time).split(' ')[1].replace('.', '').replace(':', '')+".csv", 'a')
             print("header", header)
             if not header[1]:
-                F.write("ExperimentStart" + '\t' + "GlobalParameters" + '\t' + "SessionID" + '\t' + str(
-                    "PaymentScheme") + '\t' +
-                        str("PlayerID") + '\t' + str("PlayerRole") + '\t' + str("Period") + '\t' +
-                        str("CurrentTime") + '\t' + str("Balance") + '\t' + str("Screen") + '\t' + str("StealToken") + '\t' +
-                        str("ProductionInputs") + '\t' + str("Punished") + '\t' + str("DefendTokens") + '\t' + str(
-                    "	PunishmentEvents") + '\t' + str("FrameNumber"))
+                F.write("ExperimentStart" + '\t' +
+                        "GlobalParameters" + '\t' +
+                        "SessionID" + '\t' +
+                        str("PaymentScheme") + '\t' +
+                        str("PlayerID") + '\t' +
+                        str("PlayerRole") + '\t' +
+                        str("Period") + '\t' +
+                        str("CurrentTime") + '\t' +
+                        str("Balance") + '\t' +
+                        str("Screen") + '\t' +
+                        str("StealToken") + '\t' +
+                        str("ProductionInputs") + '\t' +
+                        str("Punished") + '\t' +
+                        str("DefendTokens") + '\t' +
+                        str("PunishmentEvents") + '\t' +
+                        str("FrameNumber") + '\t'
+                        )
                 header[1] = 1
-            F.write('\n' + str(P.experiment_start_time) + '\t' + str([0.1, 17, 10, 10, 180, 15, 0.7]) + '\t' +
-                  str(n.port)  + '\t' +
-                  str(payment_scheme)  + '\t' +  str(P.id)  + '\t' +  str(P.type)  + '\t' +
-                  str(W.round_number)  + '\t' +  str(datetime.now() - W.start_time)  + '\t' +  str(P.resources['Grain'])  + '\t' +  str(loop1)  + '\t' +  str(save_steal_token) + '\t' +  str(D.score) + '\t' +
-                  str(punished if punished == P.id else 0) + '\t' +  str(save_defence_token) + '\t' +  str(data_storage_punishment) + '\t' + str(frame_number))
+            F.write('\n' + str(P.experiment_start_time) + '\t' +
+                    str([0.1, 17, 10, 10, 180, 15, 0.7]) + '\t' +
+                    str(n.port)  + '\t' +
+                    str(payment_scheme)  + '\t' +
+                    str(P.id)  + '\t' +
+                    str(P.type)  + '\t' +
+                    str(W.round_number)  + '\t' +
+                    str(P.datetime - W.start_time)  + '\t' +
+                    str(P.resources['Grain'])  + '\t' +
+                    str(loop1)  + '\t' +
+                    str("NA") + '\t' +
+                    str(D.score) + '\t' +
+                    str(punished if punished == P.id else 0) + '\t' +
+                    str(save_defence_token).replace("'", "") + '\t' +
+                    str(data_storage_punishment).replace("'", "") + '\t' +
+                    str(frame_number) + '\t' +
+                    str("P=" + str(getsize(P))) + '\t' +
+                    str("D=" + str(getsize(D))) + '\t' +
+                    str("S=" + str(getsize(S))) + '\t' +
+                    str("T=" + str(getsize(T))) + '\t' +
+                    str("C=" + str(getsize(C))) + '\t' +
+                    str("W=" + str(getsize(W))))
             punished = 0
             S.caught = [[0,0] for i in range(S.numberofstealtokens)]
         print(frame_number)

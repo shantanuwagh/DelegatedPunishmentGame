@@ -64,7 +64,8 @@ class Steal():
         self.recLogsize = 420
         self.recLog = pygame.rect.Rect(0, self.recLogY, 650, self.recLogsize)
         self.ranking = []
-        self.recPunishment = pygame.rect.Rect(885, 450, 180, 180)
+        self.recPunishment = pygame.rect.Rect(885, 580, 180, 180)
+        self.last_resource = -1
 
     def initialize_steal_token(self, n, text):
         self.stealtoken[n].x = self.stealtokenstartcoordinates[0]
@@ -130,18 +131,32 @@ class Steal():
     def draw_steal(self, win, P):
         # print(self.numberofstealtokens, len(self.stealtoken))
         win.fill((255, 255, 255))
+
+
+        font_bold = pygame.font.SysFont("Arial", 80)
+        text = font_bold.render(str("Balance"), 1, (0, 0, 0))  # Format text to be displayed
+        win.blit(text, (1600 - text.get_width() / 2, 50))
+        font_bold = pygame.font.SysFont("Arial", 150, bold=True)
+        if self.last_resource > P.resources['Grain']:
+            text = font_bold.render(str(int(P.resources["Grain"])), 1, (255, 0, 0))
+        else:
+            text = font_bold.render(str(int(P.resources["Grain"])), 1, (0, 0, 0))
+        self.last_resource = P.resources['Grain']
+        win.blit(text, (1600 - text.get_width() / 2, 200))
+
         font = pygame.font.SysFont("Arial", 20)
         font_bold = pygame.font.SysFont("Arial", 20, bold=True)
         font_small = pygame.font.SysFont("Arial", 10)
 
-        pygame.draw.line(win, (0,0,0), (0,300), (1300, 300), 1)
-        pygame.draw.line(win, (0,0,0), (0, 540), (650, 540), 1)
-        pygame.draw.line(win, (0,0,0), (650, 300), (650, 1080), 1)
+        pygame.draw.line(win, (0, 0, 0), (0, 300), (1300, 300), 1)
+        pygame.draw.line(win, (0, 0, 0), (0, 480), (1300, 480), 1)
+        pygame.draw.line(win, (0, 0, 0), (650, 480), (650, 1080), 1)
+        pygame.draw.line(win, (0, 0, 0), (1300, 0), (1300, 1080), 2)
 
         pygame.draw.rect(win, (204, 229, 255), self.recPunishment)
         pygame.draw.rect(win, (0,0,0), self.recPunishment, 1)
         punishment_text = font.render(str("Drag your officer tokens here to increase punishment probabilities."), 1, (0,0,0))
-        win.blit(punishment_text, (self.recPunishment.centerx - punishment_text.get_width()/2, self.recPunishment.y - 60))
+        win.blit(punishment_text, (self.recPunishment.centerx - punishment_text.get_width()/2, self.recPunishment.y - 30))
 
         font_bold_underline = pygame.font.SysFont("Arial", 25, bold=True)
         font_bold_underline.set_underline(1)
@@ -155,10 +170,10 @@ class Steal():
 
         font_title = pygame.font.SysFont("Arial", 28, bold=True)
         punishheading = font_title.render("PUNISH", 1, (0,0,0))
-        win.blit(punishheading, (975-(punishheading.get_width()/2), 310))
+        win.blit(punishheading, (975-(punishheading.get_width()/2), 500))
 
         punishheading = font_title.render("POLICE LOG", 1, (0, 0, 0))
-        win.blit(punishheading, (320 - (punishheading.get_width() / 2), 540))
+        win.blit(punishheading, (320 - (punishheading.get_width() / 2), 500))
 
         punishheading = font_title.render("STEAL/DEFEND", 1, (0, 0, 0))
         win.blit(punishheading, (650 - (punishheading.get_width() / 2), 10))
@@ -203,7 +218,7 @@ class Steal():
                 available_steals -= 1
         stealtext = font.render("Available steal tokens (" +str(available_steals)+ ")", 1, (0,0,0))
         win.blit(stealtext, (self.stealtokenstartcoordinates[0] - stealtext.get_width() - 30, self.stealtokenstartcoordinates[1] - 5))
-        recProbabilityCulprit = pygame.rect.Rect(700, 700, 500, 30)
+        recProbabilityCulprit = pygame.rect.Rect(700, 820, 500, 30)
 
         recProbabilityCulpritFilling = pygame.rect.Rect(recProbabilityCulprit.x, recProbabilityCulprit.y,
                                                         recProbabilityCulprit.width*(self.P_culprit),
@@ -219,7 +234,7 @@ class Steal():
             t = font_small.render(str(i*10), 1, (0,0,0))
             win.blit(t, (recProbabilityCulprit.x + (recProbabilityCulprit.width*i/10), recProbabilityCulprit.y+recProbabilityCulprit.height+5))
 
-        recProbabilityInnocent = pygame.rect.Rect(700, 850, 500, 30)
+        recProbabilityInnocent = pygame.rect.Rect(700, 920, 500, 30)
 
         recProbabilityInnocentFilling = pygame.rect.Rect(recProbabilityInnocent.x, recProbabilityInnocent.y,
                                                         recProbabilityInnocent.width * (self.P_innocent),
@@ -240,6 +255,7 @@ class Steal():
         available_defences = self.numberofdefencetokens
         for i in self.recDefenceTokens:
             pygame.draw.rect(win, (0,153,0), i)
+            pygame.draw.rect(win, (0,0,0), i, 1)
             if i.x != self.defencetokenstartcoordinates[0] or i.y != self.defencetokenstartcoordinates[1]:
                 available_defences -= 1
         defencetext = font.render("Available defence tokens (" + str(available_defences) + ")", 1, (0,0,0))

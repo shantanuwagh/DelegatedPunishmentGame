@@ -81,8 +81,8 @@ chat_lists = {
     "56" : []
 }
 trades_list = []
-server = "192.168.1.15"
-port = 5556
+server = "129.123.35.24"
+port = 5555
 
 fertility_orientation = "IE"
 
@@ -162,6 +162,7 @@ round_constants = {
     'round_time':300,
     'round_number': 0
                    }
+was_round_number_updated = False
 # ready = [0,0,0,0,0]
 # for p in players:
     # if p.id == enforcer_random:
@@ -257,6 +258,7 @@ def threaded_client(conn, player_no):
     player_no -= 1
     players[player_no].stealing_from = [0 for i in range(steals[player_no].numberofstealtokens)]
     players[player_no].fertility_orientation = fertility_orientation
+    players[player_no].datetime = datetime.now()
     tell_the_officer_data_store_punishment = ['NA' for i in range(steals[0].numberofdefencetokens)]
     conn.send(pickle.dumps((draganddrops[player_no], players[player_no], steals[player_no], chats[player_no], trades[player_no], waits[player_no])))
     round_change_flag = {
@@ -301,6 +303,8 @@ def threaded_client(conn, player_no):
 
         if data_type == "wait_class":
             wait, player = pickle.loads(conn.recv(3*4096))
+            global was_round_number_updated
+            # player.experiment_start_time = players[player_no].experiment_start_time
             # print("wait player grain", player.resources['Grain'])
             wait.start_time = waits[player_no].start_time
             wait.end_time = waits[player_no].end_time
@@ -316,7 +320,9 @@ def threaded_client(conn, player_no):
             if sum_of_ready >= 2:
                 print("Because sum_of_ready was ", sum_of_ready, "we could now start says player", player_no,". Look what waits[i].ready looks like.", "A", waits[0].ready, "B", waits[1].ready, "C", waits[2].ready, "D", waits[3].ready, "E", waits[4].ready, "F", waits[5].ready)
                 wait.started = 1
-                round_constants['round_number'] += 1
+                if was_round_number_updated == False:
+                    round_constants['round_number'] += 1
+                    was_round_number_updated = True
                 wait.round_number = round_constants['round_number']
                 waits[player_no].round_number = round_constants['round_number']
 
@@ -336,6 +342,9 @@ def threaded_client(conn, player_no):
                     steals[i] = Steal(i+1)
                     if round_constants['round_number'] == 1:
                         players[i].experiment_start_time = wait.start_time
+                        player.experiment_start_time = wait.start_time
+                        print("expt start time was updated for player no", player_no, "and the value was ", player.experiment_start_time)
+                        print(player.experiment_start_time)
                     if i == 0:
                         players[i].type = 2
                         print(steals[0].numberofdefencetokens)
@@ -355,6 +364,8 @@ def threaded_client(conn, player_no):
             if datetime.now() > wait.start_time and datetime.now() < wait.end_time:
                 for i in range(6):
                     waits[i].started = 0
+            player.datetime = datetime.now()
+            print("player", player_no, "thinks that round number is", round_constants['round_number'])
             conn.send(pickle.dumps((wait, player)))
 
         if data_type == "chat_classs":
@@ -394,7 +405,7 @@ def threaded_client(conn, player_no):
                 new_chat_row = [str(datetime.now()), player.id, chat.selected_recipient, chat.message]
                 chat.message = ''
             chats[player_no] = chat
-
+            player.datetime = datetime.now()
             conn.send(pickle.dumps((chat, player)))
 
         if data_type == "trade_classs":
@@ -470,6 +481,8 @@ def threaded_client(conn, player_no):
 
         if data_type == "drag_class":
             draganddrop, player = pickle.loads(conn.recv(3*4096))
+            if was_round_number_updated:
+                was_round_number_updated = False
             # if player_no == 1:
             #     print("round_change_flag on drag class", round_change_flag[str(player_no)], player_no)
             if round_change_flag[str(player_no)]['drag']:
@@ -511,7 +524,7 @@ def threaded_client(conn, player_no):
                 players[player_no].resources["Grain"] = max(0, player.resources['Grain'] + players[player_no].resource_change)
                 player.resources['Grain'] = max(0, player.resources['Grain'] + players[player_no].resource_change)
                 players[player_no].resource_change = 0
-
+                player.datetime = datetime.now()
                 conn.send(pickle.dumps((draganddrop, player)))
 
         if data_type == "steal_class":
@@ -574,6 +587,7 @@ def threaded_client(conn, player_no):
                                 if players[player.stealing_from[i]-1].resources["Grain"]:
                                     players[player_no].resource_change += player.stealing_amount_per_30th_of_a_second
                                     players[player.stealing_from[i]-1].resource_change -= player.stealing_amount_per_30th_of_a_second
+
                                 # else:
                                 #     steal.initialize_steal_token(i, "myserver place 2")
                                 # print("player "+ str(player.id) +" has ", str(player.resources["Grain"]) + ". He is stealing from player " + str(player.stealing_from[i]) + ". Victim now has "+ str(players[player.stealing_from[i]-1].resources["Grain"]))
@@ -656,7 +670,7 @@ def threaded_client(conn, player_no):
                 steal.P_innocent, steal.P_culprit = probability()
                 # players[player_no].resources["Grain"] = player.resources["Grain"] ##############################################################################################################
                 steals[player_no] = steal
-
+                player.datetime = datetime.now()
                 conn.send(pickle.dumps((steal, player, police_log, punished, data_store_punishment)))
             # Write data to file
             # if len(new_chat_row):
